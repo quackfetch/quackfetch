@@ -23,7 +23,7 @@ npm install quackfetch
 Or clone the repository:
 
 ```bash
-git clone https://github.com/your-repo/quackfetch.git
+git clone https://github.com/quackfetch/quackfetch.git
 cd quackfetch
 npm install
 ```
