@@ -1,0 +1,106 @@
+#!/usr/bin/env node
+
+/**
+ * quackfetch CLI - Command-line interface for DuckDuckGo search
+ */
+
+const { search } = require('../src/index.js');
+
+/**
+ * Parses command-line arguments
+ * @returns {Object} - Parsed arguments
+ */
+function parseArgs() {
+  const args = process.argv.slice(2);
+  const options = {
+    query: null,
+    max: 10,
+    userAgent: 'quackfetch/0.1 (+https://github.com/your-repo/quackfetch)',
+    rateLimit: 1000,
+    useCache: true,
+    cacheTTL: 300000
+  };
+
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    
+    if (arg === '--max' || arg === '-m') {
+      options.max = parseInt(args[++i], 10) || 10;
+    } else if (arg === '--user-agent' || arg === '-u') {
+      options.userAgent = args[++i];
+    } else if (arg === '--rate-limit' || arg === '-r') {
+      options.rateLimit = parseInt(args[++i], 10) || 1000;
+    } else if (arg === '--no-cache') {
+      options.useCache = false;
+    } else if (arg === '--cache-ttl') {
+      options.cacheTTL = parseInt(args[++i], 10) || 300000;
+    } else if (arg === '--help' || arg === '-h') {
+      console.log(`
+quackfetch - DuckDuckGo search CLI
+
+Usage:
+  quackfetch "query" [options]
+
+Options:
+  --max, -m <number>        Maximum number of results (default: 10)
+  --user-agent, -u <string> Custom user agent string
+  --rate-limit, -r <ms>     Rate limit in milliseconds (default: 1000)
+  --no-cache                Disable result caching
+  --cache-ttl <ms>          Cache TTL in milliseconds (default: 300000)
+  --help, -h                Show this help message
+
+Examples:
+  quackfetch "node.js tutorial"
+  quackfetch "python" --max 5
+  quackfetch "javascript" --no-cache
+      `);
+      process.exit(0);
+    } else if (!arg.startsWith('-') && !options.query) {
+      options.query = arg;
+    }
+  }
+
+  return options;
+}
+
+/**
+ * Main CLI function
+ */
+async function main() {
+  const options = parseArgs();
+
+  if (!options.query) {
+    console.error('Error: Query is required');
+    console.error('Usage: quackfetch "query" [options]');
+    console.error('Run "quackfetch --help" for more information');
+    process.exit(1);
+  }
+
+  try {
+    const results = await search(options.query, {
+      max: options.max,
+      userAgent: options.userAgent,
+      rateLimit: options.rateLimit,
+      useCache: options.useCache,
+      cacheTTL: options.cacheTTL
+    });
+
+    // Output results as JSON
+    console.log(JSON.stringify(results, null, 2));
+
+  } catch (error) {
+    console.error('Error:', error.message);
+    process.exit(1);
+  }
+}
+
+// Run CLI if executed directly
+if (require.main === module) {
+  main().catch(error => {
+    console.error('Unexpected error:', error);
+    process.exit(1);
+  });
+}
+
+module.exports = { main, parseArgs };
+
